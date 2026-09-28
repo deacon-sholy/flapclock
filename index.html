@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" data-theme="white">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="FlapClock - a split-flap flip clock that runs live in your browser. By Deacon Sholy.">
+<meta name="author" content="Deacon Sholy">
+<title>FlapClock - Flip Clock</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="stage">
+    <div id="clock" role="timer" aria-live="off">
+      <div class="clock-time" id="clock-time"></div>
+      <div class="day-line" id="day-line"></div>
+      <div class="credit-line">FlapClock by Deacon Sholy</div>
+    </div>
+  </main>
+
+  <div id="controls" class="controls">
+    <div class="ctl-group">
+      <button data-act="fmt"   class="btn" type="button" title="12 / 24-hour (T)">12/24h</button>
+      <button data-act="sec"   class="btn" type="button" title="Show seconds (S)">Sec</button>
+      <button data-act="day"   class="btn" type="button" title="Show day and date (D)">Day</button>
+      <button data-act="ampm"  class="btn" type="button" title="Show AM/PM (A)">AM/PM</button>
+      <button data-act="flaps" class="btn" type="button" title="Split-flap animation (H)">Flaps</button>
+      <button data-act="blink" class="btn" type="button" title="Blinking colon (K)">Colon</button>
+    </div>
+
+    <div class="ctl-sep" aria-hidden="true"></div>
+
+    <div class="ctl-group">
+      <button data-act="theme" class="btn theme" type="button" title="Cycle colour theme (C)">White</button>
+      <button data-act="glow"  class="btn" type="button" title="Ambient glow (G)">Glow</button>
+      <button data-act="credit" class="btn" type="button" title="Credit line (B)">Credit</button>
+    </div>
+
+    <div class="ctl-sep" aria-hidden="true"></div>
+
+    <div class="ctl-group">
+      <label class="ctl-slider">Dim
+        <input type="range" data-act="dim" min="0" max="80" step="1" value="0" aria-label="Dim the clock">
+      </label>
+      <label class="ctl-slider">Size
+        <input type="range" data-act="size" min="30" max="100" step="1" value="100" aria-label="Clock size">
+      </label>
+    </div>
+
+    <div class="ctl-sep" aria-hidden="true"></div>
+
+    <div class="ctl-group">
+      <button data-act="full" class="btn" type="button" title="Toggle fullscreen (F)">Fullscreen</button>
+      <button data-act="exit" class="btn" type="button" title="Exit">Exit</button>
+      <button data-act="help" class="btn" type="button" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">?</button>
+    </div>
+  </div>
+
+  <div id="hint" class="hint">
+    <span><kbd>?</kbd> controls</span><span><kbd>F</kbd> fullscreen</span><span>double-click to fullscreen</span>
+  </div>
+
+  <div id="help" class="help" hidden>
+    <div class="help-panel" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+      <h2>Controls</h2>
+      <ul>
+        <li><kbd>F</kbd> <kbd>Space</kbd> fullscreen</li>
+        <li><kbd>T</kbd> 12 / 24-hour</li>
+        <li><kbd>S</kbd> seconds</li>
+        <li><kbd>D</kbd> day &amp; date</li>
+        <li><kbd>A</kbd> AM / PM</li>
+        <li><kbd>H</kbd> flip animation</li>
+        <li><kbd>K</kbd> blinking colon</li>
+        <li><kbd>C</kbd> colour theme</li>
+        <li><kbd>G</kbd> ambient glow</li>
+        <li><kbd>B</kbd> credit line</li>
+        <li><kbd>[</kbd> <kbd>]</kbd> dim / brighten</li>
+        <li><kbd>-</kbd> <kbd>=</kbd> smaller / larger</li>
+        <li><kbd>?</kbd> this help</li>
+        <li><kbd>Esc</kbd> close / exit fullscreen</li>
+      </ul>
+      <p class="note">
+        It reads your system clock and updates on every second, then formats the
+        date for your locale. Hit <b>Fullscreen</b> and leave it to use it as a
+        screensaver &mdash; move the mouse or press a key to bring the controls back.
+      </p>
+      <button class="btn close" data-act="help-close" type="button">Close</button>
+      <p class="credit">
+        FlapClock by <b>Deacon Sholy</b>
+      </p>
+    </div>
+  </div>
+
+  <script src="clock.js"></script>
+</body>
+</html>

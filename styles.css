@@ -1,0 +1,461 @@
+/* FlapClock - split-flap flip clock, pure CSS 3D */
+
+:root {
+  --fg: #f4f5f7;
+  --glowc: rgba(150, 190, 255, 0.22);
+  --glow: 0;              /* 0..1 glow intensity, set by JS */
+  --dim: 0;               /* 0..1, subtracted from brightness */
+  --dh: 220px;            /* digit height, set by JS to fit viewport */
+  --dw: calc(var(--dh) * 0.60);
+  --dfs: calc(var(--dh) * 0.78);
+  --gap: calc(var(--dh) * 0.05);
+  --colonw: calc(var(--dh) * 0.26);
+  --dot: calc(var(--dh) * 0.075);
+  --persp: calc(var(--dh) * 2.2);
+  --radius: calc(var(--dh) * 0.05);
+  --half-dur: 170ms;      /* kept in sync with HALF in clock.js */
+  --flip-ease: cubic-bezier(0.45, 0.02, 0.2, 1);
+  --font: "Segoe UI Variable Display", Inter, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* ---------- themes ---------- */
+
+html[data-theme="white"] { --fg: #f4f5f7; --glowc: rgba(150, 190, 255, 0.22); }
+html[data-theme="amber"] { --fg: #ffb454; --glowc: rgba(255, 146, 34, 0.26); }
+html[data-theme="ice"]   { --fg: #8ed4ff; --glowc: rgba(56, 168, 255, 0.26); }
+html[data-theme="mint"]  { --fg: #7df0b4; --glowc: rgba(56, 226, 150, 0.24); }
+html[data-theme="rose"]  { --fg: #ffa0c6; --glowc: rgba(255, 88, 150, 0.24); }
+
+* { box-sizing: border-box; }
+
+/* The UA rule for [hidden] is display:none, but any author `display` value
+   (e.g. .help{display:flex}) outranks it. Make `hidden` actually hide. */
+[hidden] { display: none !important; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: #000;
+  color: var(--fg);
+  font-family: var(--font);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* soft ambient bloom behind the digits */
+#stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(58% 42% at 50% 50%, var(--glowc), transparent 72%);
+  opacity: var(--glow);
+  z-index: 0;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+#clock {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  filter: brightness(calc(1 - var(--dim)));
+  user-select: none;
+  cursor: default;
+}
+
+body.idle { cursor: none; }
+
+/* ---------- time row ---------- */
+
+.clock-time {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+
+.colon {
+  width: var(--colonw);
+  margin: 0 calc(var(--dh) * 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--dh) * 0.13);
+}
+.colon i {
+  display: block;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: 50%;
+  background: var(--fg);
+  transition: opacity 90ms linear;
+}
+html.colon-off .colon i { opacity: 0.14; }
+
+.ampm {
+  position: absolute;
+  top: calc(var(--dh) * 0.02);
+  right: calc(var(--dh) * -0.05);
+  font-size: calc(var(--dh) * 0.105);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  opacity: 0.7;
+}
+.ampm:empty { display: none; }
+
+/* ---------- day / date line ---------- */
+
+.day-line {
+  margin-top: calc(var(--dh) * 0.15);
+  max-width: 92vw;
+  font-size: calc(var(--dh) * 0.125);
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.62;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: opacity 0.4s ease;
+}
+.day-line:empty { display: none; }
+.day-line.swap { opacity: 0; }
+
+/* Author credit. Set in a serif italic rather than the numerals' sans: it reads
+   as a printed signature instead of more clock data, and serif italics want tight
+   tracking, not the wide uppercase tracking the date above uses. */
+.credit-line {
+  margin-top: calc(var(--dh) * 0.12);
+  max-width: 92vw;
+  font-family: Constantia, "Sitka Text", Cambria, Georgia, "Times New Roman", serif;
+  font-size: calc(var(--dh) * 0.092);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+  font-optical-sizing: auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+body.no-credit .credit-line { display: none; }
+
+/* ---------- flip card ---------- */
+
+.card {
+  position: relative;
+  width: var(--dw);
+  height: var(--dh);
+  font-size: var(--dfs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.005em;
+  perspective: var(--persp);
+}
+
+.half, .leaf {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  overflow: hidden;
+}
+
+.half.top, .leaf-a { top: 0; }
+.half.bottom, .leaf-b { top: 50%; }
+
+.half.top    { border-radius: var(--radius) var(--radius) 0 0; }
+.half.bottom { border-radius: 0 0 var(--radius) var(--radius); }
+.leaf-a      { border-radius: var(--radius) var(--radius) 0 0; }
+.leaf-b      { border-radius: 0 0 var(--radius) var(--radius); }
+
+/* glyph is rendered once at full card height; each window clips its half */
+.glyph {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--dh);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: var(--fg);
+  text-shadow: 0 calc(var(--dh) * 0.006) 0 rgba(0, 0, 0, 0.5);
+}
+body.glow-on .glyph {
+  text-shadow:
+    0 0 calc(var(--dh) * 0.035) var(--glowc),
+    0 calc(var(--dh) * 0.006) 0 rgba(0, 0, 0, 0.5);
+}
+
+/* top window shows the top of the glyph */
+.half.top .glyph,
+.leaf-a  .glyph { top: 0; }
+
+/* bottom window shows the bottom of the glyph */
+.half.bottom .glyph,
+.leaf-b    .glyph { top: calc(var(--dh) / -2); }
+
+/* seam between the two halves */
+.card::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  margin-top: -0.5px;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 4;
+  pointer-events: none;
+}
+body.no-flap .card::after { display: none; }
+
+/* hinge highlight on the lower edge, like a real flap */
+.half.bottom::before,
+.leaf-b::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.13);
+  z-index: 2;
+}
+body.no-flap .half.bottom::before { display: none; }
+
+/* soft shading so the split reads as physical */
+.half.top    { box-shadow: inset 0 -10px 12px -10px rgba(0, 0, 0, 0.7); }
+.half.bottom { box-shadow: inset 0  10px 12px -10px rgba(0, 0, 0, 0.7); }
+
+/* ---------- moving leaves ---------- */
+
+.leaf {
+  z-index: 3;
+  opacity: 0;
+  backface-visibility: hidden;
+  will-change: transform;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.55);
+}
+
+.leaf-a {                       /* old top half swings down over the top region */
+  transform-origin: 50% 100%;
+  transform: rotateX(0deg);
+}
+.leaf-b {                       /* new bottom half drops into the bottom region */
+  transform-origin: 50% 0%;
+  transform: rotateX(-90deg);
+}
+
+.card.flipping .leaf {
+  opacity: 1;
+  transition: transform var(--half-dur) var(--flip-ease);
+}
+.card.flipping.flip-a .leaf-a { transform: rotateX(-90deg); }
+.card.flipping.flip-b .leaf-b { transform: rotateX(0deg); }
+
+/* ---------- controls ---------- */
+
+.controls {
+  position: fixed;
+  left: 50%;
+  bottom: 22px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: rgba(20, 20, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(18px) saturate(1.3);
+  -webkit-backdrop-filter: blur(18px) saturate(1.3);
+  z-index: 50;
+  opacity: 1;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+body.idle .controls {
+  opacity: 0;
+  transform: translateX(-50%) translateY(10px);
+  pointer-events: none;
+}
+
+.ctl-sep {
+  width: 1px;
+  align-self: stretch;
+  margin: 2px 4px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.ctl-group { display: flex; gap: 6px; align-items: center; }
+
+.btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn:hover { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.btn:focus-visible { outline: 2px solid rgba(255, 255, 255, 0.7); outline-offset: 2px; }
+.btn.on {
+  background: var(--fg);
+  color: #000;
+  border-color: var(--fg);
+}
+.btn.theme {
+  min-width: 68px;
+  text-transform: capitalize;
+}
+
+.ctl-slider {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ctl-slider input[type="range"] {
+  width: 76px;
+  accent-color: var(--fg);
+  cursor: pointer;
+}
+
+/* ---------- hint ---------- */
+
+.hint {
+  position: fixed;
+  left: 50%;
+  bottom: 88px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.45);
+  z-index: 40;
+  transition: opacity 0.5s ease;
+}
+.hint.gone { opacity: 0; pointer-events: none; }
+body.idle .hint { opacity: 0; }
+
+kbd {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ---------- help overlay ---------- */
+
+.help {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.78);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 100;
+  animation: fade 0.18s ease;
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+.help-panel {
+  background: rgba(18, 18, 22, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  padding: 26px 30px;
+  max-width: 520px;
+  width: 100%;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.7);
+}
+.help-panel h2 {
+  margin: 0 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+.help-panel ul {
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+.help-panel li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+.help-panel .note {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.6;
+  margin: 0 0 4px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+.help-panel .close { margin-top: 14px; }
+.help-panel .credit {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 11.5px;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.32);
+}
+.help-panel .credit b { color: rgba(255, 255, 255, 0.62); font-weight: 600; }
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --half-dur: 1ms; }
+  .colon i { transition: none; }
+  .help { animation: none; }
+  #stage::after { transition: none; }
+}

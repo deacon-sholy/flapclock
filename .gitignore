@@ -1,0 +1,26 @@
+# WebView2 profile cache. The host creates one next to the .scr on first run,
+# roughly 10 MB of regenerable browser state. Copying it to another machine or
+# committing it serves no purpose.
+*.WebView2/
+
+# 8.3 short-name duplicates, e.g. FLAPCL~1.SCR.WebView2, which Windows creates
+# when the .scr is launched through its short path.
+FLAPCL~1.*
+
+# WebView2 SDK assemblies. Fetched from the NuGet package rather than vendored;
+# see the build command in README.md.
+Microsoft.Web.WebView2.Core.dll
+Microsoft.Web.WebView2.WinForms.dll
+WebView2Loader.dll
+
+# Build products. The downloadable package is attached to the GitHub Release
+# rather than committed, so a clone stays source-only. Build it with the csc
+# command in README.md, or just download the release.
+FlapClock.scr
+dist/
+
+# Test scratch files
+_test.exe
+_t.exe
+_*.exe
+_trap*.html
