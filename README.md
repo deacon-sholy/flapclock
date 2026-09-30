@@ -13,6 +13,9 @@ exit.
 
 **Alternative:** double-click `start.bat` (same thing via a brief command window).
 
+**On macOS:** double-click `FlapClock.command`, then press `F` if it does not go
+fullscreen by itself. See "macOS" below.
+
 **Manual:** just double-click `index.html` to open it in any browser, then press
 `F` for fullscreen.
 
@@ -30,7 +33,8 @@ For the browser version, four files are enough:
 `index.html`, `styles.css`, `clock.js`, `FlapClock.vbs`
 
 Add `start.bat` if you want a launcher that still works where script execution
-is blocked by policy. Add `FlapClock.scr` plus the three WebView2 DLLs
+is blocked by policy. Add `FlapClock.command` if the other machine is a Mac.
+Add `FlapClock.scr` plus the three WebView2 DLLs
 (`Microsoft.Web.WebView2.Core.dll`, `Microsoft.Web.WebView2.WinForms.dll`,
 `WebView2Loader.dll`) if you want the real screensaver as well.
 
@@ -39,6 +43,38 @@ Then on the new machine, double-click `FlapClock.vbs`.
 That is the whole setup. Windows 10/11 ships with Edge, so there is nothing to
 install. Settings are stored per-browser in `localStorage`, so set it up again
 on the new machine, or copy the profile if you want them carried over.
+
+## macOS
+
+The clock itself is plain HTML/CSS/JS and runs on a Mac as-is - copy
+`index.html`, `styles.css` and `clock.js` across and open `index.html` in any
+browser, then press `F` for fullscreen. `styles.css` already falls back to
+`-apple-system`, so the digits look native rather than substituted.
+
+`FlapClock.command` is the Mac equivalent of the Windows launchers. It finds
+Chrome, Chromium, Edge or Brave in `/Applications` or `~/Applications` and opens
+the page fullscreen, falling back to your default browser if none of those are
+installed. Everything else in this README that mentions `.vbs`, `.bat`, `.scr`,
+the WebView2 host or the Windows screen saver timeout is Windows-only and has no
+Mac equivalent - macOS does not let third-party apps register a screen saver, so
+use the built-in **Clock** screen saver in *System Settings -> Screen Saver*
+for that.
+
+Two Mac-specific things to know:
+
+- **Executable bit.** Finder will not run a `.command` that is not marked
+  executable. Right-click it and choose **Open**, or run this once in Terminal
+  from the folder that holds it: `chmod +x FlapClock.command`
+- **Gatekeeper.** If the files arrived by download, macOS marks them as coming
+  from an unidentified developer. `xattr -d com.apple.quarantine FlapClock.command`
+  clears that, or right-click -> **Open** once and confirm.
+
+The launcher runs in a Terminal window that stays open behind the clock, which is
+normal for a `.command` file. Switch away from it with `Cmd+Tab`, or quit
+Terminal with `Cmd+Q` once the clock is up - the clock keeps running.
+
+Settings live in `localStorage`, so they persist per browser, exactly as on
+Windows.
 
 ## Controls
 
@@ -121,7 +157,8 @@ this app intentionally ignores. Only Windows' screensaver timeout runs it.
 - `index.html` - page structure and control bar
 - `styles.css` - the 3D split-flap animation, themes and layout
 - `clock.js` - live time/day logic, flipping, settings
-- `FlapClock.vbs` / `start.bat` - fullscreen launchers (Windows)
+- `FlapClock.vbs` / `start.bat` / `FlapClock.command` - fullscreen launchers
+  (Windows / Windows / macOS)
 - `FlapClockScreensaver.cs` - source for the WebView2 screensaver host
 - `build-release.ps1` - rebuilds `dist\FlapClock-<version>.zip` and `SHA256SUMS.txt`
 - `LICENSE` / `CHANGELOG.md` - MIT licence and release history

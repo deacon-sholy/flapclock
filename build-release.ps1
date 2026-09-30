@@ -29,7 +29,7 @@ $zip   = Join-Path $dist "FlapClock-$Version.zip"
 # README actually work straight out of the archive.
 $files = @(
   "index.html", "styles.css", "clock.js",
-  "FlapClock.vbs", "start.bat", "FlapClock.scr",
+  "FlapClock.vbs", "start.bat", "FlapClock.command", "FlapClock.scr",
   "Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll", "WebView2Loader.dll",
   "FlapClockScreensaver.cs",
   "README.md", "LICENSE", "CHANGELOG.md"

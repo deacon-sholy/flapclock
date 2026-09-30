@@ -4,6 +4,25 @@ All notable changes to FlapClock are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [semantic versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- macOS support. The clock itself already ran anywhere; `FlapClock.command` is
+  the Mac counterpart to the Windows launchers, opening the page fullscreen in
+  Chrome, Chromium, Edge or Brave and falling back to the default browser.
+
+### Changed
+
+- The Exit button now names the platform's real close shortcut (`Cmd+W` on macOS,
+  `Alt+F4` elsewhere) instead of always saying `Alt+F4`.
+
+### Notes
+
+- Only the browser path is portable. `FlapClock.vbs`, `start.bat` and the
+  WebView2 `FlapClock.scr` screensaver remain Windows-only - macOS does not allow
+  third-party apps to register a screen saver.
+
 ## [1.0.0] - 2026-09-28
 
 First public release.

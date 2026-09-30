@@ -14,6 +14,13 @@
   var THEMES = ["white", "amber", "ice", "mint", "rose"];
   var GLOW_MAX = 0.55;
 
+  // Which shortcut actually closes a browser window, so the Exit button can
+  // name the right one. navigator.platform is deprecated but still populated in
+  // every engine this runs in; the user agent is the fallback.
+  var IS_MAC = /mac|iphone|ipad|ipod/i.test(navigator.platform || "") ||
+               /Mac OS X/i.test(navigator.userAgent || "");
+  var CLOSE_KEYS = IS_MAC ? "Cmd+W" : "Alt+F4";
+
   // Bump when defaults change so previously-saved settings don't override them.
   var SETTINGS_VERSION = 3;
 
@@ -398,7 +405,7 @@
     // Browsers refuse window.close() on tabs they opened themselves, so tell
     // the user what to do rather than letting the button do nothing.
     setTimeout(function () {
-      if (!window.closed) flash("Press Alt+F4 to close this window");
+      if (!window.closed) flash("Press " + CLOSE_KEYS + " to close this window");
     }, 250);
   }
 
